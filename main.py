@@ -9,6 +9,10 @@ WIDTH, HEIGHT = 800, 600
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Ping Pong - Pygame Version")
 
+def __init__(self):
+    self.player_score = 0
+    self.ai_score = 0
+
 # Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -31,7 +35,8 @@ def main():
         engine.handle_input()
         engine.update()
         engine.render(SCREEN)
-
+        engine.update()
+        engine.check_game_over(SCREEN)
         pygame.display.flip()
         clock.tick(FPS)
 

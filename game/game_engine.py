@@ -1,6 +1,8 @@
 import pygame
 from .paddle import Paddle
 from .ball import Ball
+import time as time
+import sys
 
 # Game Engine
 
@@ -53,3 +55,30 @@ class GameEngine:
         ai_text = self.font.render(str(self.ai_score), True, WHITE)
         screen.blit(player_text, (self.width//4, 20))
         screen.blit(ai_text, (self.width * 3//4, 20))
+
+    def check_game_over(self, screen):
+    # When either player reaches 5 points, show game over text
+        if self.player_score >= 5 or self.ai_score >= 5:
+            # Determine winner message
+            if self.player_score >= 5:
+                message = "Player Wins!"
+            else:
+                message = "AI Wins!"
+
+            # Render the message using the same font and color
+            game_over_text = self.font.render(message, True, WHITE)
+            text_rect = game_over_text.get_rect(center=(self.width // 2, self.height // 2))
+
+            # Draw everything once more to keep paddles/ball visible behind text
+            self.render(screen)
+
+            # Overlay the message
+            screen.blit(game_over_text, text_rect)
+            pygame.display.flip()
+
+            # Short pause before quitting
+            pygame.time.wait(3000)  # 3 seconds
+            pygame.quit()
+            sys.exit()
+
+
