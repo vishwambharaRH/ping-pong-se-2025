@@ -13,6 +13,8 @@ class Ball:
         self.screen_height = screen_height
         self.velocity_x = random.choice([-5, 5])
         self.velocity_y = random.choice([-3, 3])
+        self.start_x = x
+        self.start_y = y
 
     def move(self):
         self.x += self.velocity_x
@@ -47,3 +49,15 @@ class Ball:
 
     def rect(self):
         return pygame.Rect(self.x, self.y, self.width, self.height)
+    
+    def reset_position(self):
+        # Reset to initial coordinates
+        self.x = self.start_x
+        self.y = self.start_y
+
+        # Safely flip the X direction to serve toward the other side
+        self.velocity_x *= -1
+
+        # Ensure Y velocity stays within same magnitude
+        if self.velocity_y == 0:
+            self.velocity_y = 4  # fallback in case it’s zero
