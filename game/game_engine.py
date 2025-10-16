@@ -1,10 +1,8 @@
 import pygame
 from .paddle import Paddle
 from .ball import Ball
-import time as time
 import sys
-
-# Game Engine
+import os
 
 WHITE = (255, 255, 255)
 
@@ -14,15 +12,26 @@ class GameEngine:
         self.height = height
         self.paddle_width = 10
         self.paddle_height = 100
-        self.target_score = 5  # Default target score for Best of 5
 
+        # Default target score (first to this wins)
+        self.target_score = 5
+
+        # Entities
         self.player = Paddle(10, height // 2 - 50, self.paddle_width, self.paddle_height)
         self.ai = Paddle(width - 20, height // 2 - 50, self.paddle_width, self.paddle_height)
         self.ball = Ball(width // 2, height // 2, 7, 7, width, height)
 
+        # Scores
         self.player_score = 0
         self.ai_score = 0
+
+        # Font
         self.font = pygame.font.SysFont("Arial", 30)
+
+        # Try to use ball's loaded sounds (Ball loads them if mixer initialized)
+        self.hit_sound = getattr(self.ball, "hit_sound", None)
+        self.wall_sound = getattr(self.ball, "wall_sound", None)
+        self.score_sound = getattr(self.ball, "score_sound", None)
 
     def handle_input(self):
         keys = pygame.key.get_pressed()
@@ -32,16 +41,26 @@ class GameEngine:
             self.player.move(10, self.height)
 
     def update(self):
+        # Move ball and check collisions
         self.ball.move()
         self.ball.check_collision(self.player, self.ai)
 
-        if self.ball.x <= 0:
+        # Check for scoring (left or right beyond screen)
+        # Left side (player missed)
+        if self.ball.x + self.ball.width < 0:
             self.ai_score += 1
-            self.ball.reset()
-        elif self.ball.x >= self.width:
-            self.player_score += 1
+            if self.score_sound:
+                self.score_sound.play()
             self.ball.reset()
 
+        # Right side (ai missed)
+        elif self.ball.x > self.width:
+            self.player_score += 1
+            if self.score_sound:
+                self.score_sound.play()
+            self.ball.reset()
+
+        # Move AI paddle
         self.ai.auto_track(self.ball, self.height)
 
     def render(self, screen):
@@ -68,7 +87,7 @@ class GameEngine:
             game_over_text = self.font.render(message, True, WHITE)
             text_rect = game_over_text.get_rect(center=(self.width // 2, self.height // 3))
 
-            # Draw final frame
+            # Draw final frame and overlay text + options
             self.render(screen)
             screen.blit(game_over_text, text_rect)
 
@@ -81,7 +100,6 @@ class GameEngine:
                 small_font.render("Press ESC to Exit", True, WHITE),
             ]
 
-            # Position them below the winner message
             for i, text in enumerate(options_text):
                 rect = text.get_rect(center=(self.width // 2, self.height // 2 + i * 60))
                 screen.blit(text, rect)
@@ -97,13 +115,16 @@ class GameEngine:
                         sys.exit()
                     elif event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_3:
-                            self.target_score = 3  # Best of 3 → first to 2
+                            # Best of 3 => first to 2
+                            self.target_score = 2
                             waiting = False
                         elif event.key == pygame.K_5:
-                            self.target_score = 5  # Best of 5 → first to 3
+                            # Best of 5 => first to 3
+                            self.target_score = 3
                             waiting = False
                         elif event.key == pygame.K_7:
-                            self.target_score = 7  # Best of 7 → first to 4
+                            # Best of 7 => first to 4
+                            self.target_score = 4
                             waiting = False
                         elif event.key == pygame.K_ESCAPE:
                             pygame.quit()
@@ -112,8 +133,5 @@ class GameEngine:
             # Reset game state for replay
             self.player_score = 0
             self.ai_score = 0
-            self.ball.reset_position()  # assumes your Ball class has a reset method
+            self.ball.reset()
             pygame.time.wait(500)  # slight pause before restarting
-
-
-
